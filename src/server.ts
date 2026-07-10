@@ -31,9 +31,10 @@ async function proxyToBackend(request: Request): Promise<Response> {
   const backendUrl = `${API_BACKEND}${url.pathname}${url.search}`;
 
   const headers = new Headers(request.headers);
-  // Remove hop-by-hop headers
+  // Remove hop-by-hop and encoding headers to prevent fetch auto-decompression issues
   headers.delete("host");
   headers.delete("connection");
+  headers.delete("accept-encoding");
 
   try {
     const response = await fetch(backendUrl, {
@@ -50,6 +51,9 @@ async function proxyToBackend(request: Request): Promise<Response> {
     const responseHeaders = new Headers(response.headers);
     responseHeaders.delete("connection");
     responseHeaders.delete("transfer-encoding");
+    responseHeaders.delete("content-encoding"); // Important: fetch already decompresses
+    responseHeaders.delete("content-length"); // Length might change after decompression
+    
     // Allow CORS
     responseHeaders.set("access-control-allow-origin", "*");
 
