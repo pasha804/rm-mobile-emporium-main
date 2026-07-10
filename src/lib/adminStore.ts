@@ -113,7 +113,6 @@ export function getAdminProducts(): Product[] {
   return lsGet<Product[]>("rm_admin_products", [...staticProducts]);
 }
 
-/** Async — fetches from server, falls back to localStorage */
 export async function getProductsAsync(): Promise<Product[]> {
   const serverData = await apiGetProducts();
   if (serverData !== null) {
@@ -121,7 +120,13 @@ export async function getProductsAsync(): Promise<Product[]> {
     lsSet("rm_admin_products", serverData);
     return serverData;
   }
-  return getAdminProducts();
+  // Server is empty (e.g. Railway wiped the ephemeral disk).
+  // Auto-restore from localStorage!
+  const localData = getAdminProducts();
+  if (localData && localData.length > 0) {
+    apiSaveProducts(localData).catch((e) => console.warn("Auto-restore failed:", e));
+  }
+  return localData;
 }
 
 async function persistProducts(list: Product[]): Promise<void> {
@@ -184,7 +189,11 @@ export async function getCategoriesAsync(): Promise<AdminCategory[]> {
     lsSet("rm_admin_categories", serverData);
     return serverData;
   }
-  return getAdminCategories();
+  const localData = getAdminCategories();
+  if (localData && localData.length > 0) {
+    apiSaveCategories(localData).catch((e) => console.warn("Auto-restore failed:", e));
+  }
+  return localData;
 }
 
 async function persistCategories(cats: AdminCategory[]): Promise<void> {
@@ -215,7 +224,11 @@ export async function getSettingsAsync(): Promise<SiteSettings> {
     lsSet("rm_admin_settings", serverData);
     return serverData;
   }
-  return getSettings();
+  const localData = getSettings();
+  if (localData) {
+    apiSaveSettings(localData).catch((e) => console.warn("Auto-restore failed:", e));
+  }
+  return localData;
 }
 
 export async function saveSettingsAsync(s: SiteSettings): Promise<void> {
