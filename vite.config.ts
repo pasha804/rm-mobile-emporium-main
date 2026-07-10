@@ -9,11 +9,11 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  // Use Node.js preset — produces .output/server/index.mjs
-  // Works on Railway, Hostinger VPS, and any Node.js host
-  nitro: {
-    preset: "node",
-  },
+  // Nitro preset is controlled by the NITRO_PRESET environment variable:
+  //   - Vercel:  set NITRO_PRESET=vercel in Vercel project env vars
+  //   - Railway: set NITRO_PRESET=node  (or leave unset, node is the default)
+  // This keeps the same codebase deployable to both platforms without changes.
+  nitro: {},
   // Proxy /api to the Express backend (port 4000) in dev AND preview
   vite: {
     server: {

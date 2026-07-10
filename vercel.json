@@ -1,0 +1,12 @@
+{
+  "framework": "tanstack-start",
+  "buildCommand": "npm run build",
+  "build": {
+    "env": {
+      "NITRO_PRESET": "vercel"
+    }
+  },
+  "env": {
+    "API_BACKEND_URL": "@api_backend_url"
+  }
+}
