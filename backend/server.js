@@ -81,6 +81,10 @@ app.use(cors({
 app.use(express.json({ limit: "50mb" })); // 50MB for base64 images
 
 // ── Health check ─────────────────────────────────────────────────────────────
+app.get("/", (_req, res) => {
+  res.json({ ok: true, service: "RM MOBILE SHOP API", time: new Date().toISOString() });
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, service: "RM MOBILE SHOP API", time: new Date().toISOString() });
 });
