@@ -1,10 +1,10 @@
 {
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm install && npm run build"
+    "buildCommand": "cd backend && npm install"
   },
   "deploy": {
-    "startCommand": "node .output/server/index.mjs",
+    "startCommand": "cd backend && node server.js",
     "healthcheckPath": "/",
     "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE"
