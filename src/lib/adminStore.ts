@@ -110,12 +110,15 @@ export function isAdminLoggedIn(): boolean {
 // ─── PRODUCTS ─────────────────────────────────────────────────────────────────
 /** Sync — used for SSR / initial render */
 export function getAdminProducts(): Product[] {
-  return lsGet<Product[]>("rm_admin_products", [...staticProducts]);
+  const raw = lsGet<Product[]>("rm_admin_products", [...staticProducts]);
+  // Filter out any mock products from old local storage
+  const mockPrefixes = ["tg-", "cov-", "chr-", "cab-", "nb-", "eb-", "pb-", "sw-", "hf-", "sp-", "bt-", "gt-"];
+  return raw.filter((p) => !mockPrefixes.some(prefix => p.id.startsWith(prefix)));
 }
 
 export async function getProductsAsync(): Promise<Product[]> {
   const serverData = await apiGetProducts();
-  if (serverData !== null) {
+  if (serverData !== null && serverData.length > 0) {
     // Mirror to localStorage so offline works
     lsSet("rm_admin_products", serverData);
     return serverData;
