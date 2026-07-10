@@ -1,0 +1,22 @@
+# RM MOBILE SHOP — Apache Reverse Proxy Config
+# Used on Hostinger shared hosting with Node.js support
+# This proxies all traffic to the Node.js app running on port 3000
+
+Options -MultiViews
+RewriteEngine On
+
+# Proxy to Node.js server
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
+
+# Security headers
+Header always set X-Content-Type-Options nosniff
+Header always set X-Frame-Options SAMEORIGIN
+Header always set X-XSS-Protection "1; mode=block"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Cache static assets
+<FilesMatch "\.(ico|css|js|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$">
+  Header set Cache-Control "max-age=31536000, public, immutable"
+</FilesMatch>

@@ -1,0 +1,8 @@
+# Railway/Nixpacks build config for the Express backend
+# Railway will auto-detect Node.js and use this to configure the build
+
+[phases.build]
+cmds = ["npm install"]
+
+[start]
+cmd = "node server.js"

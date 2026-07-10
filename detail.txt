@@ -1,0 +1,292 @@
+================================================================================
+  RM MOBILE SHOP — COMPLETE PROJECT DOCUMENTATION
+  Version: 6.0.0  |  July 2026
+  Build Preset: node-server (Node.js — Railway / Hostinger)
+================================================================================
+
+  Business  : RM MOBILE SHOP
+  Tagline   : Quality Mobile Accessories at Best Prices
+  WhatsApp  : +92 334 5581147
+  Email     : rbtaggaming@gmail.com
+  Location  : Pakistan (Nationwide Delivery)
+  Hours     : Mon–Sat  10:00 AM – 10:00 PM
+
+================================================================================
+  QUICK START (LOCAL DEVELOPMENT)
+================================================================================
+
+  Terminal 1 — Backend API:
+    cd backend
+    node server.js
+    → Running at http://localhost:4000
+
+  Terminal 2 — Frontend:
+    npm run dev
+    → Running at http://localhost:8080
+
+  Admin:  http://localhost:8080/admin/login
+  Login:  admin / rmmobile2024
+
+================================================================================
+  DEPLOYMENT OPTIONS
+================================================================================
+
+  OPTION A — Railway (GitHub → Auto Deploy)    See: railway-deploy.md
+  OPTION B — Hostinger VPS (manual upload)     See: hostingerprocess.md
+
+================================================================================
+  1. ARCHITECTURE
+================================================================================
+
+  Two Node.js processes:
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │  FRONTEND  TanStack Start SSR — port 3000                           │
+  │  • Public store + Admin panel UI                                     │
+  │  • src/server.ts proxies /api/* to the backend                      │
+  │  • Build output: .output/server/index.mjs  (node-server preset)     │
+  └────────────────────────────┬─────────────────────────────────────────┘
+                               │  /api/* proxied by src/server.ts
+  ┌────────────────────────────▼─────────────────────────────────────────┐
+  │  BACKEND  Express API — port 4000                                   │
+  │  • Stores data in backend/data/*.json on server disk                │
+  │  • ALL browsers read same JSON files = products sync everywhere     │
+  └──────────────────────────────────────────────────────────────────────┘
+
+  API_BACKEND_URL env var controls where the proxy forwards requests:
+  • Local dev:  http://localhost:4000  (default)
+  • Railway:    https://rm-backend-xxxx.up.railway.app
+  • Hostinger:  http://localhost:4000  (same server, default)
+
+================================================================================
+  2. FILE STRUCTURE
+================================================================================
+
+  ├── backend/                    Express API server
+  │   ├── server.js               Main server (all API routes)
+  │   ├── package.json            { express, cors } — ESM
+  │   ├── railway.json            Railway deploy config
+  │   ├── nixpacks.toml           Build config for Railway
+  │   ├── .env                    Local env (PORT, ADMIN_*)
+  │   └── data/                   Created at runtime — NOT in git
+  │       ├── products.json
+  │       ├── categories.json
+  │       └── settings.json
+  │
+  ├── src/
+  │   ├── server.ts               SSR entry + /api proxy
+  │   ├── lib/
+  │   │   ├── api.ts              Frontend API client (/api/* calls)
+  │   │   ├── adminStore.ts       API-first + localStorage fallback
+  │   │   ├── shop.ts             Business constants
+  │   │   └── whatsapp.ts         WhatsApp URL builder
+  │   ├── hooks/
+  │   │   └── useProducts.ts      SSR-safe product hook
+  │   └── routes/
+  │       ├── __root.tsx          Root layout
+  │       ├── index.tsx           Home /
+  │       ├── products.tsx        Products /products
+  │       ├── products_.$id.tsx   Product detail /products/:id
+  │       ├── deals.tsx           Deals /deals
+  │       ├── about.tsx           About /about
+  │       ├── contact.tsx         Contact /contact
+  │       ├── admin.tsx           Admin layout /admin
+  │       └── admin/
+  │           ├── login.tsx       /admin/login
+  │           ├── dashboard.tsx   /admin/dashboard
+  │           ├── products.tsx    /admin/products
+  │           ├── categories.tsx  /admin/categories
+  │           └── settings.tsx    /admin/settings
+  │
+  ├── .gitignore                  Excludes node_modules, .output, data/
+  ├── railway.json                Frontend Railway deploy config
+  ├── vite.config.ts              Build config (preset: node-server)
+  ├── ecosystem.config.cjs        PM2 config (Hostinger VPS)
+  ├── package.json                Frontend deps
+  ├── railway-deploy.md           GitHub + Railway guide
+  ├── hostingerprocess.md         Hostinger VPS guide
+  ├── workflow.md                 System architecture + data flows
+  └── detail.txt                  This file
+
+================================================================================
+  3. ALL ROUTES
+================================================================================
+
+  PUBLIC (with Navbar + Footer)
+  /               Home
+  /products       Products listing — search, filter, sort
+  /products/:id   Product detail — images, quantity, WhatsApp order
+  /deals          Deals + live countdown timer
+  /about          About Us
+  /contact        Contact form → WhatsApp
+
+  ADMIN (bare layout, client-side auth only)
+  /admin/login        Login
+  /admin/dashboard    Stats + overview
+  /admin/products     Product CRUD + image upload
+  /admin/categories   Category CRUD + gradients
+  /admin/settings     Site settings
+
+================================================================================
+  4. BACKEND API ENDPOINTS
+================================================================================
+
+  Base: backend/server.js  |  port 4000  |  All: { ok, data?, error? }
+
+  GET  /api/health           Server health check
+  POST /api/auth/login       { username, password } → { ok: true/false }
+  GET  /api/products         → { ok, data: Product[] | null }
+  POST /api/products         Saves Product[] to backend/data/products.json
+  GET  /api/categories       → { ok, data: AdminCategory[] | null }
+  POST /api/categories       Saves to backend/data/categories.json
+  GET  /api/settings         → { ok, data: SiteSettings }
+  POST /api/settings         Saves to backend/data/settings.json
+
+  Body limit: 50MB (supports base64 product images)
+
+================================================================================
+  5. DATA FLOW — CROSS-BROWSER SYNC
+================================================================================
+
+  Admin adds product (in Opera):
+  POST /api/products → proxy → Express → writes products.json on disk
+
+  Customer opens site (in Edge):
+  SSR renders with staticProducts (instant HTML)
+  → useProducts() hook → GET /api/products → reads products.json
+  → React update → shows all products including admin-added ones ✅
+
+  Fallback chain (if backend unreachable):
+  API → localStorage (browser) → static TypeScript data
+
+================================================================================
+  6. PRODUCT DATA MODEL
+================================================================================
+
+  type Product = {
+    id: string            unique slug e.g. "my-product-id"
+    name: string
+    category: CategorySlug
+    price: number         PKR
+    oldPrice?: number     shows discount badge
+    rating: number        0.0–5.0
+    reviews: number
+    inStock: boolean      controls WhatsApp button
+    featured?: boolean    Home featured section
+    bestSeller?: boolean  Deals page + badge
+    newArrival?: boolean  New Arrivals section + badge
+    description: string
+    features: string[]    key feature bullets
+    specs: Record<string, string>
+    images?: string[]     up to 5 — base64 or HTTPS URL
+  }
+
+  12 Categories:
+  tempered-glass | mobile-covers | chargers | data-cables
+  neckbands | earbuds | power-banks | smart-watches
+  handfrees | speakers | batteries | gaming-thumbs
+
+================================================================================
+  7. ADMIN PANEL
+================================================================================
+
+  URL:       /admin/login
+  Default:   admin / rmmobile2024
+  CHANGE PASSWORD BEFORE DEPLOYING.
+
+  Change on Railway:  Backend env var  ADMIN_PASSWORD
+  Change on VPS:      ecosystem.config.cjs  ADMIN_PASSWORD
+
+  Auth uses localStorage only (no server-side session).
+  No SSR redirect loops — all auth is client-side useEffect.
+
+  Product images:
+  • Upload from device → base64 data URL
+  • Add by URL → HTTPS link
+  • Up to 5 per product
+  • object-contain on white background — full image always visible
+
+================================================================================
+  8. BUILD SYSTEM
+================================================================================
+
+  Build command:   npm run build
+  Preset:          node-server  (Nitro)
+  Output:          .output/server/index.mjs  (runs with: node .output/server/index.mjs)
+  Static assets:   .output/public/
+
+  The preset was changed from cloudflare-module to node-server
+  via nitro: { preset: "node" } in vite.config.ts.
+  This produces a standalone Node.js server compatible with
+  Railway, Hostinger, or any VPS.
+
+================================================================================
+  9. ENVIRONMENT VARIABLES
+================================================================================
+
+  FRONTEND (src/server.ts reads these at runtime):
+    API_BACKEND_URL   URL of the Express backend
+                      Local:    http://localhost:4000   (default)
+                      Railway:  https://your-backend.up.railway.app
+                      VPS:      http://localhost:4000   (default)
+    PORT              Frontend port (default: 3000)
+    NODE_ENV          production
+
+  BACKEND (backend/server.js reads these):
+    PORT              Backend port (default: 4000)
+    ADMIN_USERNAME    Login username (default: admin)
+    ADMIN_PASSWORD    Login password (default: rmmobile2024 — CHANGE IT)
+    NODE_ENV          production
+
+================================================================================
+  10. WHATSAPP ORDER MESSAGE
+================================================================================
+
+  Auto-generated when customer clicks "Order on WhatsApp":
+
+  Assalam-o-Alaikum,
+  I would like to place an order from RM MOBILE SHOP.
+
+  Product: [Name]
+  Price: Rs. [Price]
+  Quantity: [Qty]
+  Total Price: Rs. [Price × Qty]
+
+  Please confirm product availability.
+  Kindly contact me regarding delivery address, payment method,
+  delivery charges and expected delivery time.
+  Thank you.
+
+  WhatsApp: 923345581147  (change in src/lib/shop.ts → whatsapp)
+
+================================================================================
+  11. TECHNOLOGY STACK
+================================================================================
+
+  Frontend:  React 19, TanStack Start (SSR), TanStack Router v1,
+             Tailwind CSS v4, TypeScript 5.8, Vite 8, Lucide React,
+             Radix UI + shadcn/ui (40+ components)
+
+  Backend:   Node.js 18+, Express 4.19, CORS,
+             JSON file storage (no database required)
+
+  Build:     Nitro (node-server preset), PM2, Nginx
+  Deploy:    Railway (recommended) or Hostinger VPS
+
+================================================================================
+  12. UPDATING THE SITE
+================================================================================
+
+  On Railway:
+    git add . && git commit -m "update" && git push
+    → Railway auto-redeploys both services ✅
+
+  On Hostinger VPS:
+    cd /var/www/rm-mobile-shop
+    git pull
+    npm run build
+    pm2 restart rm-frontend
+
+================================================================================
+  END — RM MOBILE SHOP v6.0.0
+================================================================================
