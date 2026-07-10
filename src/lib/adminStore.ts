@@ -103,7 +103,8 @@ export function adminLogout(): void {
 
 export function isAdminLoggedIn(): boolean {
   if (typeof window === "undefined") return false;
-  return localStorage.getItem("rm_admin_auth") === "1";
+  const auth = localStorage.getItem("rm_admin_auth");
+  return auth === "1" || auth === '"1"';
 }
 
 // ─── PRODUCTS ─────────────────────────────────────────────────────────────────
