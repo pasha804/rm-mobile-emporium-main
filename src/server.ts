@@ -8,7 +8,7 @@ import { renderErrorPage } from "./lib/error-page";
 // All /api/* requests are proxied here so the frontend never needs to know
 // the backend port — every browser just calls /api/* on the same domain.
 const API_BACKEND =
-  process.env.API_BACKEND_URL ?? "http://localhost:4000";
+  process.env.API_BACKEND_URL ?? "https://rm-mobile-emporium-main-production-d107.up.railway.app";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;

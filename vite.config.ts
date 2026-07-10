@@ -19,7 +19,7 @@ export default defineConfig({
     server: {
       proxy: {
         "/api": {
-          target: "http://localhost:4000",
+          target: "https://rm-mobile-emporium-main-production-d107.up.railway.app",
           changeOrigin: true,
         },
       },
@@ -27,7 +27,7 @@ export default defineConfig({
     preview: {
       proxy: {
         "/api": {
-          target: "http://localhost:4000",
+          target: "https://rm-mobile-emporium-main-production-d107.up.railway.app",
           changeOrigin: true,
         },
       },
