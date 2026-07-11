@@ -486,8 +486,8 @@ function ProductModal({
           <div className="grid grid-cols-2 gap-3 p-4 sm:gap-4 sm:p-6">
             {divider("Basic Info")}
             <Field label="Product ID *" hint={isNew ? "Lowercase, hyphens only. Cannot be changed later." : undefined}>
-              <input value={id} onChange={(e) => setId(e.target.value)} readOnly={!isNew}
-                placeholder="my-product-id" autoComplete="off" className={cn(inp, !isNew && "cursor-not-allowed opacity-50")} />
+              <input value={id} onChange={(e) => setId(e.target.value.toLowerCase().replace(/\s+/g, '-'))} readOnly={!isNew}
+                placeholder="my-product-id" autoComplete="off" autoCapitalize="none" autoCorrect="off" className={cn(inp, !isNew && "cursor-not-allowed opacity-50")} />
             </Field>
             <Field label="Product Name *">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. 9H Clear Tempered Glass" autoComplete="off" className={inp} />
@@ -558,9 +558,9 @@ function ProductModal({
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 flex items-center justify-end gap-3 rounded-b-2xl border-t border-slate-800 bg-slate-900/95 px-4 py-3 backdrop-blur sm:px-6">
-            <button onClick={onClose} disabled={saving} className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-400 hover:bg-slate-800 transition-colors disabled:opacity-40">Cancel</button>
-            <button onClick={handleSave} disabled={saving}
+          <div className="sticky bottom-0 flex items-center justify-end gap-3 rounded-b-2xl border-t border-slate-800 bg-slate-900/95 px-4 py-3 backdrop-blur sm:px-6 z-20">
+            <button type="button" onClick={onClose} disabled={saving} className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-400 hover:bg-slate-800 transition-colors disabled:opacity-40">Cancel</button>
+            <button type="button" onClick={handleSave} disabled={saving}
               className="flex items-center gap-2 rounded-xl bg-royal px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-60 shadow-royal">
               {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? "Saving to server…" : isNew ? "Add Product" : "Save Changes"}
